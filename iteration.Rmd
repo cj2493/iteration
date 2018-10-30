@@ -223,3 +223,8 @@ weather_nest$data[[3]] %>%
   skimr::skim()
 ```
 
+```{r}
+weather_nest %>%
+  mutate(lm_results = map(data, weather_lm))
+```
+

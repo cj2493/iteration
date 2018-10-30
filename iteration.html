@@ -545,11 +545,11 @@ weather_lm(weather_nest$data[[1]])</code></pre>
 ##  n obs: 366 
 ##  n variables: 4 
 ## 
-## -- Variable type:Date -------------------------------------------------------------------
+## -- Variable type:Date --------------------------------------------------------------------
 ##  variable missing complete   n        min        max     median n_unique
 ##      date       0      366 366 2016-01-01 2016-12-31 2016-07-01      366
 ## 
-## -- Variable type:numeric ----------------------------------------------------------------
+## -- Variable type:numeric -----------------------------------------------------------------
 ##  variable missing complete   n  mean     sd    p0  p25  p50   p75  p100
 ##      prcp       0      366 366 60.95 116.71   0    0   0    76    940  
 ##      tmax       0      366 366  7.54   6.77 -10.8  1.9 6.95 12.47  24.9
@@ -558,6 +558,14 @@ weather_lm(weather_nest$data[[1]])</code></pre>
 ##  &lt;U+2587&gt;&lt;U+2581&gt;&lt;U+2581&gt;&lt;U+2581&gt;&lt;U+2581&gt;&lt;U+2581&gt;&lt;U+2581&gt;&lt;U+2581&gt;
 ##  &lt;U+2581&gt;&lt;U+2581&gt;&lt;U+2587&gt;&lt;U+2587&gt;&lt;U+2587&gt;&lt;U+2585&gt;&lt;U+2583&gt;&lt;U+2581&gt;
 ##  &lt;U+2581&gt;&lt;U+2581&gt;&lt;U+2582&gt;&lt;U+2586&gt;&lt;U+2587&gt;&lt;U+2585&gt;&lt;U+2583&gt;&lt;U+2581&gt;</code></pre>
+<pre class="r"><code>weather_nest %&gt;%
+  mutate(lm_results = map(data, weather_lm))</code></pre>
+<pre><code>## # A tibble: 3 x 4
+##   name           id          data               lm_results
+##   &lt;chr&gt;          &lt;chr&gt;       &lt;list&gt;             &lt;list&gt;    
+## 1 CentralPark_NY USW00094728 &lt;tibble [366 x 4]&gt; &lt;S3: lm&gt;  
+## 2 Waikiki_HA     USC00519397 &lt;tibble [366 x 4]&gt; &lt;S3: lm&gt;  
+## 3 Waterhole_WA   USS0023B17S &lt;tibble [366 x 4]&gt; &lt;S3: lm&gt;</code></pre>
 </div>
 
 
