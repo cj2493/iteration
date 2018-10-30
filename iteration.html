@@ -228,6 +228,337 @@ output</code></pre>
 ##    mean    sd
 ##   &lt;dbl&gt; &lt;dbl&gt;
 ## 1 -3.43  1.18</code></pre>
+<div id="map-statements" class="section level2">
+<h2>map statements</h2>
+<p>Let’s replace the for loop with ‘map’</p>
+<pre class="r"><code>output = map(df, mean_and_sd)
+output</code></pre>
+<pre><code>## $a
+## # A tibble: 1 x 2
+##    mean    sd
+##   &lt;dbl&gt; &lt;dbl&gt;
+## 1  2.70  1.12
+## 
+## $b
+## # A tibble: 1 x 2
+##    mean    sd
+##   &lt;dbl&gt; &lt;dbl&gt;
+## 1 0.416  4.08
+## 
+## $c
+## # A tibble: 1 x 2
+##    mean    sd
+##   &lt;dbl&gt; &lt;dbl&gt;
+## 1  10.1 0.191
+## 
+## $d
+## # A tibble: 1 x 2
+##    mean    sd
+##   &lt;dbl&gt; &lt;dbl&gt;
+## 1 -3.43  1.18</code></pre>
+<p>Let’s try a different function</p>
+<pre class="r"><code>output = map(df, summary)
+output</code></pre>
+<pre><code>## $a
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   1.088   1.731   2.621   2.700   3.466   5.036 
+## 
+## $b
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+## -6.5418 -2.1608  0.7211  0.4164  3.8297  8.2800 
+## 
+## $c
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   9.798   9.943  10.050  10.073  10.164  10.480 
+## 
+## $d
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##  -5.321  -4.459  -3.522  -3.431  -2.670  -1.281</code></pre>
+</div>
+<div id="map-vaiant" class="section level2">
+<h2>map vaiant</h2>
+<pre class="r"><code>output = map_df(df, mean_and_sd)
+View(output)
+
+
+output = map_dbl(df, median)
+output</code></pre>
+<pre><code>##          a          b          c          d 
+##  2.6213757  0.7210996 10.0501641 -3.5216649</code></pre>
+</div>
+<div id="code-syntax" class="section level2">
+<h2>code syntax</h2>
+<p>be clear about arguments!</p>
+<pre class="r"><code>output = map(.x = df, ~ mean_and_sd(x = .x))
+output</code></pre>
+<pre><code>## $a
+## # A tibble: 1 x 2
+##    mean    sd
+##   &lt;dbl&gt; &lt;dbl&gt;
+## 1  2.70  1.12
+## 
+## $b
+## # A tibble: 1 x 2
+##    mean    sd
+##   &lt;dbl&gt; &lt;dbl&gt;
+## 1 0.416  4.08
+## 
+## $c
+## # A tibble: 1 x 2
+##    mean    sd
+##   &lt;dbl&gt; &lt;dbl&gt;
+## 1  10.1 0.191
+## 
+## $d
+## # A tibble: 1 x 2
+##    mean    sd
+##   &lt;dbl&gt; &lt;dbl&gt;
+## 1 -3.43  1.18</code></pre>
+</div>
+<div id="napoleon-dynamite" class="section level2">
+<h2>Napoleon Dynamite</h2>
+<pre class="r"><code>url_base = &quot;https://www.amazon.com/product-reviews/B00005JNBQ/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&amp;reviewerType=avp_only_reviews&amp;sortBy=recent&amp;pageNumber=&quot;
+
+vec_urls = str_c(url_base, 1:5)
+
+read_page_reviews &lt;- function(url) {
+  
+  h = read_html(url)
+  
+  review_titles = h %&gt;%
+    html_nodes(&quot;#cm_cr-review_list .review-title&quot;) %&gt;%
+    html_text()
+  
+  review_stars = h %&gt;%
+    html_nodes(&quot;#cm_cr-review_list .review-rating&quot;) %&gt;%
+    html_text() %&gt;%
+    str_extract(&quot;\\d&quot;) %&gt;%
+    as.numeric()
+  
+  review_text = h %&gt;%
+    html_nodes(&quot;.review-data:nth-child(4)&quot;) %&gt;%
+    html_text()
+  
+  reviews = tibble(
+    title = review_titles,
+    stars = review_stars,
+    text = review_text
+  )
+  
+  reviews
+}
+
+
+ouput = vector(&quot;list&quot;, length = 5)
+
+for (i in 1:5) {
+  output[[i]] = read_page_reviews(vec_urls[[i]])
+}
+
+dynamite_reviews = bind_rows(output)
+
+dynamite_reviews = map_df(vec_urls, read_page_reviews)</code></pre>
+<pre class="r"><code>library(rnoaa)
+
+weather = 
+  meteo_pull_monitors(c(&quot;USW00094728&quot;, &quot;USC00519397&quot;, &quot;USS0023B17S&quot;),
+                      var = c(&quot;PRCP&quot;, &quot;TMIN&quot;, &quot;TMAX&quot;), 
+                      date_min = &quot;2016-01-01&quot;,
+                      date_max = &quot;2016-12-31&quot;) %&gt;%
+  mutate(
+    name = recode(id, USW00094728 = &quot;CentralPark_NY&quot;, 
+                      USC00519397 = &quot;Waikiki_HA&quot;,
+                      USS0023B17S = &quot;Waterhole_WA&quot;),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %&gt;%
+  select(name, id, everything())</code></pre>
+<pre class="r"><code>weather_nest = 
+  nest(weather, date:tmin)
+
+weather_nest</code></pre>
+<pre><code>## # A tibble: 3 x 3
+##   name           id          data              
+##   &lt;chr&gt;          &lt;chr&gt;       &lt;list&gt;            
+## 1 CentralPark_NY USW00094728 &lt;tibble [366 x 4]&gt;
+## 2 Waikiki_HA     USC00519397 &lt;tibble [366 x 4]&gt;
+## 3 Waterhole_WA   USS0023B17S &lt;tibble [366 x 4]&gt;</code></pre>
+<pre class="r"><code>weather_nest %&gt;%
+  pull(name)</code></pre>
+<pre><code>## [1] &quot;CentralPark_NY&quot; &quot;Waikiki_HA&quot;     &quot;Waterhole_WA&quot;</code></pre>
+<pre class="r"><code>weather_nest %&gt;%
+  pull(id)</code></pre>
+<pre><code>## [1] &quot;USW00094728&quot; &quot;USC00519397&quot; &quot;USS0023B17S&quot;</code></pre>
+<pre class="r"><code>weather_nest %&gt;%
+  pull(data)</code></pre>
+<pre><code>## [[1]]
+## # A tibble: 366 x 4
+##    date        prcp  tmax  tmin
+##    &lt;date&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 2016-01-01     0   5.6   1.1
+##  2 2016-01-02     0   4.4   0  
+##  3 2016-01-03     0   7.2   1.7
+##  4 2016-01-04     0   2.2  -9.9
+##  5 2016-01-05     0  -1.6 -11.6
+##  6 2016-01-06     0   5    -3.8
+##  7 2016-01-07     0   7.8  -0.5
+##  8 2016-01-08     0   7.8  -0.5
+##  9 2016-01-09     0   8.3   4.4
+## 10 2016-01-10   457  15     4.4
+## # ... with 356 more rows
+## 
+## [[2]]
+## # A tibble: 366 x 4
+##    date        prcp  tmax  tmin
+##    &lt;date&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 2016-01-01     0  29.4  16.7
+##  2 2016-01-02     0  28.3  16.7
+##  3 2016-01-03     0  28.3  16.7
+##  4 2016-01-04     0  28.3  16.1
+##  5 2016-01-05     0  27.2  16.7
+##  6 2016-01-06     0  27.2  20  
+##  7 2016-01-07    46  27.8  18.3
+##  8 2016-01-08     3  28.3  17.8
+##  9 2016-01-09     8  27.8  19.4
+## 10 2016-01-10     3  28.3  18.3
+## # ... with 356 more rows
+## 
+## [[3]]
+## # A tibble: 366 x 4
+##    date        prcp  tmax  tmin
+##    &lt;date&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 2016-01-01     0   1.7  -5.9
+##  2 2016-01-02    25  -0.1  -6  
+##  3 2016-01-03     0  -5   -10  
+##  4 2016-01-04    25   0.3  -9.8
+##  5 2016-01-05    25   1.9  -1.8
+##  6 2016-01-06    25   1.4  -2.6
+##  7 2016-01-07     0   1.4  -3.9
+##  8 2016-01-08     0   1.1  -4  
+##  9 2016-01-09     0   1.4  -4.5
+## 10 2016-01-10     0   2.3  -3.8
+## # ... with 356 more rows</code></pre>
+<pre class="r"><code>weather_nest$data[[1]]</code></pre>
+<pre><code>## # A tibble: 366 x 4
+##    date        prcp  tmax  tmin
+##    &lt;date&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 2016-01-01     0   5.6   1.1
+##  2 2016-01-02     0   4.4   0  
+##  3 2016-01-03     0   7.2   1.7
+##  4 2016-01-04     0   2.2  -9.9
+##  5 2016-01-05     0  -1.6 -11.6
+##  6 2016-01-06     0   5    -3.8
+##  7 2016-01-07     0   7.8  -0.5
+##  8 2016-01-08     0   7.8  -0.5
+##  9 2016-01-09     0   8.3   4.4
+## 10 2016-01-10   457  15     4.4
+## # ... with 356 more rows</code></pre>
+<pre class="r"><code>unnest(weather_nest)</code></pre>
+<pre><code>## # A tibble: 1,098 x 6
+##    name           id          date        prcp  tmax  tmin
+##    &lt;chr&gt;          &lt;chr&gt;       &lt;date&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 CentralPark_NY USW00094728 2016-01-01     0   5.6   1.1
+##  2 CentralPark_NY USW00094728 2016-01-02     0   4.4   0  
+##  3 CentralPark_NY USW00094728 2016-01-03     0   7.2   1.7
+##  4 CentralPark_NY USW00094728 2016-01-04     0   2.2  -9.9
+##  5 CentralPark_NY USW00094728 2016-01-05     0  -1.6 -11.6
+##  6 CentralPark_NY USW00094728 2016-01-06     0   5    -3.8
+##  7 CentralPark_NY USW00094728 2016-01-07     0   7.8  -0.5
+##  8 CentralPark_NY USW00094728 2016-01-08     0   7.8  -0.5
+##  9 CentralPark_NY USW00094728 2016-01-09     0   8.3   4.4
+## 10 CentralPark_NY USW00094728 2016-01-10   457  15     4.4
+## # ... with 1,088 more rows</code></pre>
+<pre class="r"><code>weather_lm = function(df) {
+  
+  lm(tmax ~ tmin, data = df)
+  
+}
+
+weather_lm(weather_nest$data[[1]])</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = tmax ~ tmin, data = df)
+## 
+## Coefficients:
+## (Intercept)         tmin  
+##       7.779        1.045</code></pre>
+<pre class="r"><code>map(weather_nest$data, weather_lm)</code></pre>
+<pre><code>## [[1]]
+## 
+## Call:
+## lm(formula = tmax ~ tmin, data = df)
+## 
+## Coefficients:
+## (Intercept)         tmin  
+##       7.779        1.045  
+## 
+## 
+## [[2]]
+## 
+## Call:
+## lm(formula = tmax ~ tmin, data = df)
+## 
+## Coefficients:
+## (Intercept)         tmin  
+##      22.489        0.326  
+## 
+## 
+## [[3]]
+## 
+## Call:
+## lm(formula = tmax ~ tmin, data = df)
+## 
+## Coefficients:
+## (Intercept)         tmin  
+##       6.851        1.245</code></pre>
+<pre class="r"><code>map(weather_nest$data, ~lm(tmax ~ tmin, data = .x))</code></pre>
+<pre><code>## [[1]]
+## 
+## Call:
+## lm(formula = tmax ~ tmin, data = .x)
+## 
+## Coefficients:
+## (Intercept)         tmin  
+##       7.779        1.045  
+## 
+## 
+## [[2]]
+## 
+## Call:
+## lm(formula = tmax ~ tmin, data = .x)
+## 
+## Coefficients:
+## (Intercept)         tmin  
+##      22.489        0.326  
+## 
+## 
+## [[3]]
+## 
+## Call:
+## lm(formula = tmax ~ tmin, data = .x)
+## 
+## Coefficients:
+## (Intercept)         tmin  
+##       6.851        1.245</code></pre>
+<pre class="r"><code>weather_nest$data[[3]] %&gt;%
+  skimr::skim()</code></pre>
+<pre><code>## Skim summary statistics
+##  n obs: 366 
+##  n variables: 4 
+## 
+## -- Variable type:Date -------------------------------------------------------------------
+##  variable missing complete   n        min        max     median n_unique
+##      date       0      366 366 2016-01-01 2016-12-31 2016-07-01      366
+## 
+## -- Variable type:numeric ----------------------------------------------------------------
+##  variable missing complete   n  mean     sd    p0  p25  p50   p75  p100
+##      prcp       0      366 366 60.95 116.71   0    0   0    76    940  
+##      tmax       0      366 366  7.54   6.77 -10.8  1.9 6.95 12.47  24.9
+##      tmin       0      366 366  0.56   4.98 -15.1 -2.8 0.8   3.8   12.8
+##      hist
+##  &lt;U+2587&gt;&lt;U+2581&gt;&lt;U+2581&gt;&lt;U+2581&gt;&lt;U+2581&gt;&lt;U+2581&gt;&lt;U+2581&gt;&lt;U+2581&gt;
+##  &lt;U+2581&gt;&lt;U+2581&gt;&lt;U+2587&gt;&lt;U+2587&gt;&lt;U+2587&gt;&lt;U+2585&gt;&lt;U+2583&gt;&lt;U+2581&gt;
+##  &lt;U+2581&gt;&lt;U+2581&gt;&lt;U+2582&gt;&lt;U+2586&gt;&lt;U+2587&gt;&lt;U+2585&gt;&lt;U+2583&gt;&lt;U+2581&gt;</code></pre>
+</div>
 
 
 
